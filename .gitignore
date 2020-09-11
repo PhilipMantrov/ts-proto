@@ -1,6 +1,5 @@
 /node_modules/
-/build/
-/.idea
+/.idea/
 /integration/*/pbjs.js
 /integration/*/pbjs.d.ts
 coverage/
