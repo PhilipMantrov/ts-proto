@@ -19,6 +19,7 @@ const grpc = TypeNames.anyType('grpc@@improbable-eng/grpc-web');
 const share = TypeNames.anyType('share@rxjs/operators');
 const take = TypeNames.anyType('take@rxjs/operators');
 const BrowserHeaders = TypeNames.anyType('BrowserHeaders@browser-headers');
+const Code = TypeNames.anyType('Code@@improbable-eng/grpc-web/dist/typings/Code');
 
 /** Generates a client that uses the `@improbable-web/grpc-web` library. */
 export function generateGrpcClientImpl(
@@ -260,7 +261,8 @@ return new Promise((resolve, reject) => {
         .returns(TypeNames.anyType('Observable@rxjs').param(TypeNames.ANY))
         .addCodeBlock(
           CodeBlock.empty().add(
-            `const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
+            `const upStreamCodes = [2, 4, 8, 9, 10, 13, 14, 15]; /* Status Response Codes (https://developers.google.com/maps-booking/reference/grpc-api/status_codes) */
+            const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
             const request = { ..._request, ...methodDesc.requestType };
             const maybeCombinedMetadata =
     metadata && this.options.metadata
@@ -277,10 +279,12 @@ return new Observable(observer => {
           onMessage: (next) => {
             observer.next(next as any);
           },
-          onEnd: () => {
-            setTimeout(() => {
-              upStream();
-            }, DEFAULT_TIMEOUT_TIME);
+           onEnd: (code: %T) => {
+            if (upStreamCodes.find(upStreamCode => code === upStreamCode)) {
+              setTimeout(() => {
+                upStream();
+              }, DEFAULT_TIMEOUT_TIME);
+            }
           },
         });
       });
@@ -290,6 +294,7 @@ return new Observable(observer => {
 `,
             BrowserHeaders,
             grpc,
+            Code,
             share
           )
         )
@@ -366,7 +371,8 @@ return new Observable(observer => {
         .returns(TypeNames.anyType('Observable@rxjs').param(TypeNames.ANY))
         .addCodeBlock(
           CodeBlock.empty().add(
-            `const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
+            `const upStreamCodes = [2, 4, 8, 9, 10, 13, 14, 15]; /* Status Response Codes (https://developers.google.com/maps-booking/reference/grpc-api/status_codes) */
+            const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
             const request = { ..._request, ...methodDesc.requestType };
             const maybeCombinedMetadata =
     metadata && this.options.metadata
@@ -383,10 +389,12 @@ return new Observable(observer => {
           onMessage: (next) => {
             observer.next(next as any);
           },
-          onEnd: () => {
-            setTimeout(() => {
-              upStream();
-            }, DEFAULT_TIMEOUT_TIME);
+          onEnd: (code: %T) => {
+            if (upStreamCodes.find(upStreamCode => code === upStreamCode)) {
+              setTimeout(() => {
+                upStream();
+              }, DEFAULT_TIMEOUT_TIME);
+            }
           },
         });
       });
@@ -396,6 +404,7 @@ return new Observable(observer => {
 `,
             BrowserHeaders,
             grpc,
+            Code,
             share
           )
         )
