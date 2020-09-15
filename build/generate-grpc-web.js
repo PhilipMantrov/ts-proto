@@ -7,6 +7,7 @@ const grpc = ts_poet_1.TypeNames.anyType('grpc@@improbable-eng/grpc-web');
 const share = ts_poet_1.TypeNames.anyType('share@rxjs/operators');
 const take = ts_poet_1.TypeNames.anyType('take@rxjs/operators');
 const BrowserHeaders = ts_poet_1.TypeNames.anyType('BrowserHeaders@browser-headers');
+const Code = ts_poet_1.TypeNames.anyType('Code@@improbable-eng/grpc-web/dist/typings/Code');
 /** Generates a client that uses the `@improbable-web/grpc-web` library. */
 function generateGrpcClientImpl(typeMap, fileDesc, serviceDesc, options) {
     // Define the FooServiceImpl class
@@ -102,7 +103,8 @@ function addGrpcWebMisc(options, _file) {
     let file = _file;
     file = file.addCode(ts_poet_1.CodeBlock.empty()
         .addStatement('import UnaryMethodDefinition = grpc.UnaryMethodDefinition')
-        .addStatement('type UnaryMethodDefinitionish = UnaryMethodDefinition<any, any>'));
+        .addStatement('interface UnaryMethodDefinitionishR extends UnaryMethodDefinition<any, any> { requestStream: any; responseStream: any; }')
+        .addStatement('type UnaryMethodDefinitionish = UnaryMethodDefinitionishR'));
     file = file.addInterface(generateGrpcWebRpcType(options.returnObservable));
     file = file.addClass(options.returnObservable ? generateGrpcWebImplObservable() : generateGrpcWebImplPromise());
     return file;
@@ -183,7 +185,8 @@ return new Promise((resolve, reject) => {
         .addParameter('_request', ts_poet_1.TypeNames.ANY)
         .addParameter('metadata', maybeMetadata)
         .returns(ts_poet_1.TypeNames.anyType('Observable@rxjs').param(ts_poet_1.TypeNames.ANY))
-        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
+        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const upStreamCodes = [2, 4, 8, 9, 10, 13, 14, 15]; /* Status Response Codes (https://developers.google.com/maps-booking/reference/grpc-api/status_codes) */
+            const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
             const request = { ..._request, ...methodDesc.requestType };
             const maybeCombinedMetadata =
     metadata && this.options.metadata
@@ -200,17 +203,19 @@ return new Observable(observer => {
           onMessage: (next) => {
             observer.next(next as any);
           },
-          onEnd: () => {
-            setTimeout(() => {
-              upStream();
-            }, DEFAULT_TIMEOUT_TIME);
+           onEnd: (code: %T) => {
+            if (upStreamCodes.find(upStreamCode => code === upStreamCode)) {
+              setTimeout(() => {
+                upStream();
+              }, DEFAULT_TIMEOUT_TIME);
+            }
           },
         });
       });
 
       upStream();
     }).pipe(%T());
-`, BrowserHeaders, grpc, share)));
+`, BrowserHeaders, grpc, Code, share)));
 }
 function generateGrpcWebImplObservable() {
     const maybeMetadata = ts_poet_1.TypeNames.unionType(ts_poet_1.TypeNames.anyType('grpc.Metadata'), ts_poet_1.TypeNames.UNDEFINED);
@@ -264,7 +269,8 @@ return new Observable(observer => {
         .addParameter('_request', ts_poet_1.TypeNames.ANY)
         .addParameter('metadata', maybeMetadata)
         .returns(ts_poet_1.TypeNames.anyType('Observable@rxjs').param(ts_poet_1.TypeNames.ANY))
-        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
+        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const upStreamCodes = [2, 4, 8, 9, 10, 13, 14, 15]; /* Status Response Codes (https://developers.google.com/maps-booking/reference/grpc-api/status_codes) */
+            const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
             const request = { ..._request, ...methodDesc.requestType };
             const maybeCombinedMetadata =
     metadata && this.options.metadata
@@ -281,15 +287,17 @@ return new Observable(observer => {
           onMessage: (next) => {
             observer.next(next as any);
           },
-          onEnd: () => {
-            setTimeout(() => {
-              upStream();
-            }, DEFAULT_TIMEOUT_TIME);
+          onEnd: (code: %T) => {
+            if (upStreamCodes.find(upStreamCode => code === upStreamCode)) {
+              setTimeout(() => {
+                upStream();
+              }, DEFAULT_TIMEOUT_TIME);
+            }
           },
         });
       });
 
       upStream();
     }).pipe(%T());
-`, BrowserHeaders, grpc, share)));
+`, BrowserHeaders, grpc, Code, share)));
 }
