@@ -5,6 +5,7 @@ option go_package = "lib/rpx";
 
 service DashState {
   rpc UserSettings(Empty) returns (DashUserSettingsState);
+  rpc SendUserSetting(DashUserSettingsState) returns (DashUserSettingsState);
   rpc ActiveUserSettingsStream(Empty) returns (stream DashUserSettingsState);
 }
 
@@ -22,8 +23,10 @@ message DashFlash {
 
 message DashUserSettingsState {
   string email = 1;
-  URLs urls = 6;
-  repeated DashFlash flashes = 7;
+  int64 longNumber = 2;
+  int32 smallNumber = 3;
+  URLs urls = 4;
+  repeated DashFlash flashes = 5;
 
   message URLs {
     string connect_google = 1;

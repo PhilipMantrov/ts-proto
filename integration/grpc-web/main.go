@@ -61,11 +61,18 @@ func (s *stateService) UserSettings(ctx context.Context, in *rpx.Empty) (*rpx.Da
 
 	val := rpx.DashUserSettingsState{
 		Email:   "test-email@example.com",
+		LongNumber: 1,
+        SmallNumber: 2,
 		Urls:    &urls,
 		Flashes: flashes,
 	}
 
 	return &val, nil
+}
+
+func (s *stateService) SendUserSetting(ctx context.Context, in *rpx.DashUserSettingsState) (*rpx.DashUserSettingsState, error) {
+    log.Println(in);
+    return in, nil;
 }
 
 func (s *stateService) ActiveUserSettingsStream(in *rpx.Empty, stream rpx.DashState_ActiveUserSettingsStreamServer) error {
@@ -88,18 +95,24 @@ func (s *stateService) ActiveUserSettingsStream(in *rpx.Empty, stream rpx.DashSt
 	val := rpx.DashUserSettingsState{
 		Email:   "test-email@example.com",
 		Urls:    &urls,
+		LongNumber: 1,
+        SmallNumber: 2,
 		Flashes: flashes,
 	}
 
 	val_second := rpx.DashUserSettingsState{
 		Email:   "test2-email@example.com",
 		Urls:    &urls,
+        LongNumber: 1,
+        SmallNumber: 2,
 		Flashes: flashes,
 	}
 
 	val_third := rpx.DashUserSettingsState{
 		Email:   "test3-email@example.com",
 		Urls:    &urls,
+		LongNumber: 1,
+        SmallNumber: 2,
 		Flashes: flashes,
 	}
 
