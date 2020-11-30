@@ -136,7 +136,7 @@ function generateGrpcWebRpcType(returnObservable) {
 /** Implements the `Rpc` interface by making calls using the `grpc.unary` method. */
 function generateGrpcWebImplPromise() {
     const maybeMetadata = ts_poet_1.TypeNames.unionType(ts_poet_1.TypeNames.anyType('grpc.Metadata'), ts_poet_1.TypeNames.UNDEFINED);
-    const optionsParam = ts_poet_1.TypeNames.anonymousType(['transport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['debug?', ts_poet_1.TypeNames.BOOLEAN], ['metadata?', maybeMetadata]);
+    const optionsParam = ts_poet_1.TypeNames.anonymousType(['transport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['invokeTransport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['debug?', ts_poet_1.TypeNames.BOOLEAN], ['metadata?', maybeMetadata]);
     const t = ts_poet_1.TypeNames.typeVariable('T', ts_poet_1.TypeNames.bound('UnaryMethodDefinitionish'));
     return ts_poet_1.ClassSpec.create('GrpcWebImpl')
         .addModifiers(ts_poet_1.Modifier.EXPORT)
@@ -197,6 +197,7 @@ return new Observable(observer => {
         %T.invoke(methodDesc, {
           host: this.host,
           request,
+          transport: this.options.invokeTransport,
           metadata: maybeCombinedMetadata,
           debug: this.options.debug,
           onMessage: (next) => {
@@ -218,7 +219,7 @@ return new Observable(observer => {
 }
 function generateGrpcWebImplObservable() {
     const maybeMetadata = ts_poet_1.TypeNames.unionType(ts_poet_1.TypeNames.anyType('grpc.Metadata'), ts_poet_1.TypeNames.UNDEFINED);
-    const optionsParam = ts_poet_1.TypeNames.anonymousType(['transport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['debug?', ts_poet_1.TypeNames.BOOLEAN], ['metadata?', maybeMetadata]);
+    const optionsParam = ts_poet_1.TypeNames.anonymousType(['transport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['invokeTransport?', ts_poet_1.TypeNames.anyType('grpc.TransportFactory')], ['debug?', ts_poet_1.TypeNames.BOOLEAN], ['metadata?', maybeMetadata]);
     const t = ts_poet_1.TypeNames.typeVariable('T', ts_poet_1.TypeNames.bound('UnaryMethodDefinitionish'));
     return ts_poet_1.ClassSpec.create('GrpcWebImpl')
         .addModifiers(ts_poet_1.Modifier.EXPORT)
@@ -280,6 +281,7 @@ return new Observable(observer => {
         %T.invoke(methodDesc, {
           host: this.host,
           request,
+          transport: this.options.invokeTransport,
           metadata: maybeCombinedMetadata,
           debug: this.options.debug,
           onMessage: (next) => {
