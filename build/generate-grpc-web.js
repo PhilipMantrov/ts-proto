@@ -148,74 +148,8 @@ function generateGrpcWebImplPromise() {
         .addParameter('options', optionsParam)
         .addStatement('this.host = host')
         .addStatement('this.options = options'))
-        .addFunction(ts_poet_1.FunctionSpec.create('unary')
-        .addTypeVariable(t)
-        .addParameter('methodDesc', t)
-        .addParameter('_request', ts_poet_1.TypeNames.ANY)
-        .addParameter('metadata', maybeMetadata)
-        .returns(ts_poet_1.TypeNames.PROMISE.param(ts_poet_1.TypeNames.ANY))
-        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const request = { ..._request, ...methodDesc.requestType };
-            const maybeCombinedMetadata =
-    metadata && this.options.metadata
-      ? new %T({ ...this.options?.metadata.headersMap, ...metadata?.headersMap })
-      : metadata || this.options.metadata;
-return new Promise((resolve, reject) => {
-  %T.unary(methodDesc, {
-    request,
-    host: this.host,
-    metadata: maybeCombinedMetadata,
-    transport: this.options.unaryTransport,
-    debug: this.options.debug,
-    onEnd: function (response) {
-      if (response.status === grpc.Code.OK) {
-        resolve(response.message);
-      } else {
-        const err = new Error(response.statusMessage) as any;
-        err.code = response.status;
-        err.metadata = response.trailers;
-        reject(err);
-      }
-    },
-  });
-});
-`, BrowserHeaders, grpc)))
-        .addFunction(ts_poet_1.FunctionSpec.create('invoke')
-        .addTypeVariable(t)
-        .addParameter('methodDesc', t)
-        .addParameter('_request', ts_poet_1.TypeNames.ANY)
-        .addParameter('metadata', maybeMetadata)
-        .returns(ts_poet_1.TypeNames.anyType('Observable@rxjs').param(ts_poet_1.TypeNames.ANY))
-        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const upStreamCodes = [2, 4, 8, 9, 10, 13, 14, 15]; /* Status Response Codes (https://developers.google.com/maps-booking/reference/grpc-api/status_codes) */
-            const DEFAULT_TIMEOUT_TIME: number = 3 /* seconds */ * 1000 /* ms */;
-            const request = { ..._request, ...methodDesc.requestType };
-            const maybeCombinedMetadata =
-    metadata && this.options.metadata
-      ? new %T({ ...this.options?.metadata.headersMap, ...metadata?.headersMap })
-      : metadata || this.options.metadata;
-return new Observable(observer => {
-      const upStream = (() => {
-        %T.invoke(methodDesc, {
-          host: this.host,
-          request,
-          transport: this.options.invokeTransport,
-          metadata: maybeCombinedMetadata,
-          debug: this.options.debug,
-          onMessage: (next) => {
-            observer.next(next as any);
-          },
-           onEnd: (code: %T) => {
-            if (upStreamCodes.find(upStreamCode => code === upStreamCode)) {
-              setTimeout(() => {
-                upStream();
-              }, DEFAULT_TIMEOUT_TIME);
-            }
-          },
-        });
-      });
-
-      upStream();
-    }).pipe(%T());
-`, BrowserHeaders, grpc, Code, share)));
+        .addFunction(createUnaryMethod(t, maybeMetadata, false))
+        .addFunction(createInvokeMethod(t, maybeMetadata));
 }
 function generateGrpcWebImplObservable() {
     const maybeMetadata = ts_poet_1.TypeNames.unionType(ts_poet_1.TypeNames.anyType('grpc.Metadata'), ts_poet_1.TypeNames.UNDEFINED);
@@ -231,13 +165,18 @@ function generateGrpcWebImplObservable() {
         .addParameter('options', optionsParam)
         .addStatement('this.host = host')
         .addStatement('this.options = options'))
-        .addFunction(ts_poet_1.FunctionSpec.create('unary')
+        .addFunction(createUnaryMethod(t, maybeMetadata, true))
+        .addFunction(createInvokeMethod(t, maybeMetadata));
+}
+function createUnaryMethod(t, maybeMetadata, observable = false) {
+    return ts_poet_1.FunctionSpec.create('unary')
         .addTypeVariable(t)
         .addParameter('methodDesc', t)
         .addParameter('_request', ts_poet_1.TypeNames.ANY)
         .addParameter('metadata', maybeMetadata)
-        .returns(ts_poet_1.TypeNames.anyType('Observable@rxjs').param(ts_poet_1.TypeNames.ANY))
-        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(`const request = { ..._request, ...methodDesc.requestType };
+        .returns(observable ? ts_poet_1.TypeNames.anyType('Observable@rxjs').param(ts_poet_1.TypeNames.ANY) : ts_poet_1.TypeNames.PROMISE.param(ts_poet_1.TypeNames.ANY))
+        .addCodeBlock(ts_poet_1.CodeBlock.empty().add(observable ?
+        `const request = { ..._request, ...methodDesc.requestType };
             const maybeCombinedMetadata =
     metadata && this.options.metadata
       ? new %T({ ...this.options?.metadata.headersMap, ...metadata?.headersMap })
@@ -262,8 +201,35 @@ return new Observable(observer => {
       },
     });
   }).pipe(%T(1));
-`, BrowserHeaders, grpc, take)))
-        .addFunction(ts_poet_1.FunctionSpec.create('invoke')
+` :
+        `const request = { ..._request, ...methodDesc.requestType };
+            const maybeCombinedMetadata =
+    metadata && this.options.metadata
+      ? new %T({ ...this.options?.metadata.headersMap, ...metadata?.headersMap })
+      : metadata || this.options.metadata;
+return new Promise((resolve, reject) => {
+  %T.unary(methodDesc, {
+    request,
+    host: this.host,
+    metadata: maybeCombinedMetadata,
+    transport: this.options.unaryTransport,
+    debug: this.options.debug,
+    onEnd: function (response) {
+      if (response.status === grpc.Code.OK) {
+        resolve(response.message);
+      } else {
+        const err = new Error(response.statusMessage) as any;
+        err.code = response.status;
+        err.metadata = response.trailers;
+        reject(err);
+      }
+    },
+  });
+});
+`, BrowserHeaders, grpc, take));
+}
+function createInvokeMethod(t, maybeMetadata) {
+    return ts_poet_1.FunctionSpec.create('invoke')
         .addTypeVariable(t)
         .addParameter('methodDesc', t)
         .addParameter('_request', ts_poet_1.TypeNames.ANY)
@@ -299,5 +265,5 @@ return new Observable(observer => {
 
       upStream();
     }).pipe(%T());
-`, BrowserHeaders, grpc, Code, share)));
+`, BrowserHeaders, grpc, Code, share));
 }
